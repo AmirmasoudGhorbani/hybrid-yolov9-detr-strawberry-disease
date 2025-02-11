@@ -1,0 +1,102 @@
+import torch
+from torch.utils.data import DataLoader, Dataset
+import os
+import cv2
+from ultralytics import YOLO
+
+# Define dataset paths directly
+train_root = '/content/drive/MyDrive/yolov9 dataset/train'
+val_root = '/content/drive/MyDrive/yolov9 dataset/val'
+
+class CustomDataset(Dataset):
+    def __init__(self, root, transform=None, image_size=(640, 640)):
+        self.root = root
+        self.transform = transform
+        self.image_size = image_size
+        self.image_paths = []
+        self.label_paths = []
+
+        # Load image and label paths
+        images_dir = os.path.join(root, 'images')
+        labels_dir = os.path.join(root, 'labels')
+
+        self.image_paths = [os.path.join(images_dir, f) for f in os.listdir(images_dir) if f.endswith('.jpg') or f.endswith('.png')]
+        self.label_paths = [os.path.join(labels_dir, f.replace('.jpg', '.txt').replace('.png', '.txt')) for f in os.listdir(images_dir) if f.endswith('.jpg') or f.endswith('.png')]
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+        # Load image
+        img_path = self.image_paths[idx]
+        image = cv2.imread(img_path)
+        if image is None:
+            raise FileNotFoundError(f"Image not found at path: {img_path}")
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.resize(image, self.image_size)  # Resize image to the same size
+        image = torch.tensor(image, dtype=torch.float32).permute(2, 0, 1) / 255.0
+
+        # Load label
+        label_path = self.label_paths[idx]
+        if not os.path.exists(label_path):
+            raise FileNotFoundError(f"Label file not found at path: {label_path}")
+        with open(label_path, 'r') as f:
+            labels = []
+            for line in f.readlines():
+                values = list(map(float, line.strip().split()))
+                if len(values) == 5:  # Ensure the label has 5 values: [class_id, x_center, y_center, width, height]
+                    labels.append(values)
+                elif len(values) > 5:
+                    labels.append(values[:5])  # Trim to the first 5 values
+                elif len(values) < 5:
+                    # Fill with default values if the label is incomplete
+                    values += [0.0] * (5 - len(values))
+                    labels.append(values)
+        labels = torch.tensor(labels, dtype=torch.float32)
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, labels
+
+if __name__ == "__main__":
+    # Load your custom dataset
+    train_dataset = CustomDataset(root=train_root)
+    val_dataset = CustomDataset(root=val_root)
+
+    # Define a custom collate function to handle variable-length labels
+    def collate_fn(batch):
+        images, labels = zip(*batch)
+        images = torch.stack(images, 0)
+        return images, list(labels)
+
+    # Create DataLoaders
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4, collate_fn=collate_fn)
+    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4, collate_fn=collate_fn)
+
+    # Load YOLOv9s model using ultralytics package with pretrained weights
+    model = YOLO('/content/drive/MyDrive/yolov9_lastfinetune_results/A100_finetune_extra_optimized/weights/best.pt')  # Load pre-trained YOLOv9s model
+    # Train with additional optimizations
+    model.train(
+        data='/content/drive/MyDrive/yolov9 dataset/data.yaml',
+        epochs=20,
+        project='/content/drive/MyDrive/yolov9_lastfinetune_results',
+        name='A100_finetune_best_resume',
+        batch=32,
+        workers=4,
+        device=0,
+        amp=True,
+        cos_lr=True,
+        mosaic=1.0,
+        mixup=0.2,
+        auto_augment='randaugment',
+        label_smoothing=0.1,
+        warmup_epochs=5,
+        warmup_momentum=0.8,
+        warmup_bias_lr=0.1,
+        imgsz=1024,
+        patience=0,  # Disable early stopping
+        lr0=1e-4  # Lower learning rate for fine-tuning
+    )
+
+    print("Fine-tuning completed.")
