@@ -1,4 +1,4 @@
-import torch
+perimentimport torch
 from torch.utils.data import DataLoader, Dataset
 import os
 import cv2
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4, collate_fn=collate_fn)
 
     # Load YOLOv9s model using ultralytics package with pretrained weights
-    model = YOLO('/content/drive/MyDrive/yolov9_lastfinetune_results/A100_finetune_extra_optimized/weights/best.pt')  # Load pre-trained YOLOv9s model
+    model = YOLO('/content/drive/MyDrive/yolov9_lastfinetune_results/A100_experiment/weights/best.pt')  # Load pre-trained YOLOv9s model
     # Train with additional optimizations
     model.train(
         data='/content/drive/MyDrive/yolov9 dataset/data.yaml',
