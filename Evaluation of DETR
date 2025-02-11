@@ -1,0 +1,210 @@
+import torch
+import torchvision
+import os
+import random
+from transformers import DetrImageProcessor, DetrForObjectDetection
+from PIL import Image
+import matplotlib.pyplot as plt
+
+# Set up device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Load the DETR model
+detr_model = DetrForObjectDetection.from_pretrained("/content/drive/MyDrive/detr_strawberry_model_extrafinetuned").to(device)
+detr_model.eval()  # Set the model to evaluation mode
+
+# Setup the processor for DETR
+processor = DetrImageProcessor.from_pretrained("/content/drive/MyDrive/detr_strawberry_processor_extrafinetuned")
+
+# Custom dataset class for COCO format
+class CocoDetection(torchvision.datasets.CocoDetection):
+    def __init__(self, img_folder, processor):
+        ann_file = os.path.join(img_folder, '_annotations.coco.json')
+        super(CocoDetection, self).__init__(img_folder, ann_file)
+        self.processor = processor
+
+    def __getitem__(self, idx):
+        img, target = super(CocoDetection, self).__getitem__(idx)
+        image_id = self.ids[idx]
+        target = {'image_id': image_id, 'annotations': target}
+        return img, target
+
+# Load your test dataset (same structure as validation)
+test_path = '/content/drive/MyDrive/dataset/dataset json format/test'
+test_dataset = CocoDetection(img_folder=test_path, processor=processor)
+
+# Function to visualize the results
+def visualize_results(image, scores, labels, boxes, title, color):
+    plt.figure(figsize=(16, 10))
+    plt.imshow(image)
+    ax = plt.gca()
+    for score, label, (xmin, ymin, xmax, ymax) in zip(scores, labels, boxes):
+        ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, fill=False, color=color, linewidth=2))
+        text = f'{label}: {score:.2f}'
+        ax.text(xmin, ymin, text, fontsize=12, bbox=dict(facecolor='yellow', alpha=0.5))
+    plt.title(title)
+    plt.axis('off')
+    plt.show()
+
+# Function to run DETR inference on the test dataset
+def run_detr_inference_on_test(idx):
+    img, target = test_dataset[idx]
+    image = Image.open(os.path.join(test_path, test_dataset.coco.loadImgs(test_dataset.ids[idx])[0]['file_name']))
+
+    # Run inference with DETR directly
+    inputs = processor(images=image, return_tensors="pt").to(device)
+    with torch.no_grad():
+        outputs = detr_model(pixel_values=inputs['pixel_values'])
+
+    # Post-process DETR predictions
+    processed_outputs = processor.post_process_object_detection(outputs, target_sizes=[(image.height, image.width)], threshold=0.5)[0]
+
+    # Extract results
+    scores = processed_outputs['scores'].cpu().numpy()
+    labels = processed_outputs['labels'].cpu().numpy()
+    boxes = processed_outputs['boxes'].cpu().numpy()
+
+    # Visualize DETR results
+    visualize_results(image, scores, labels, boxes, "DETR Predictions", "yellow")
+
+# Run DETR on 5 random images from the test set
+for i in range(10):
+    idx = random.randint(0, len(test_dataset) - 1)  # Select random index from test dataset
+    run_detr_inference_on_test(idx)
+
+# Summary of DETR model predictions on test set
+print("Inference on test dataset completed. Yellow boxes represent DETR predictions.")
+
+
+
+from sklearn.metrics import precision_recall_curve, average_precision_score
+
+# Function to evaluate model and compute mAP
+def evaluate_detr_model(detr_model, dataset, processor, iou_thresholds=[0.5, 0.75, 0.95], device='cuda'):
+    ap_scores = {iou: [] for iou in iou_thresholds}
+
+    # Iterate through the dataset
+    for idx in tqdm(range(len(dataset)), desc="Evaluating DETR on test set"):
+        img, target = dataset[idx]
+        image = Image.open(os.path.join(test_path, dataset.coco.loadImgs(dataset.ids[idx])[0]['file_name']))
+
+        # Get the ground truth boxes and labels
+        actual_boxes = [ann['bbox'] for ann in target['annotations']]
+        actual_boxes = [[x, y, x + w, y + h] for x, y, w, h in actual_boxes]  # Convert from xywh to xyxy
+        actual_labels = [ann['category_id'] for ann in target['annotations']]
+
+        # Skip images with no ground truth boxes
+        if len(actual_boxes) == 0:
+            continue
+
+        # Run inference with DETR
+        inputs = processor(images=image, return_tensors="pt").to(device)
+        with torch.no_grad():
+            outputs = detr_model(pixel_values=inputs['pixel_values'])
+
+        # Post-process DETR predictions
+        processed_outputs = processor.post_process_object_detection(outputs, target_sizes=[(image.height, image.width)], threshold=0.5)[0]
+        pred_boxes = processed_outputs['boxes'].cpu().numpy()
+        pred_scores = processed_outputs['scores'].cpu().numpy()
+        pred_labels = processed_outputs['labels'].cpu().numpy()
+
+        # Calculate IoUs and precision-recall per image
+        for iou_thresh in iou_thresholds:
+            matches = []
+            for pred_box in pred_boxes:
+                ious = [calculate_iou(pred_box, gt_box) for gt_box in actual_boxes]
+                max_iou = max(ious) if ious else 0
+                matches.append(1 if max_iou >= iou_thresh else 0)
+
+            if matches:
+                precision, recall, _ = precision_recall_curve(matches, pred_scores)
+                ap = average_precision_score(matches, pred_scores)
+                ap_scores[iou_thresh].append(ap)
+
+    # Calculate mean AP for each IoU threshold
+    for iou_thresh in iou_thresholds:
+        mean_ap = np.mean(ap_scores[iou_thresh]) if ap_scores[iou_thresh] else 0
+        print(f"mAP@{iou_thresh}: {mean_ap:.4f}")
+
+# Run the evaluation
+evaluate_detr_model(detr_model, test_dataset, processor, device=device)
+
+pip install scikit-learn matplotlib
+
+from sklearn.metrics import precision_score, recall_score, f1_score, confusion_matrix
+import numpy as np
+
+# Function to evaluate model and compute mAP, Precision, Recall, F1-score
+def evaluate_detr_model(detr_model, dataset, processor, iou_thresholds=[0.5, 0.75, 0.95], device='cuda'):
+    ap_scores = {iou: [] for iou in iou_thresholds}
+    all_y_true = []
+    all_y_pred = []
+
+    # Iterate through the dataset
+    for idx in tqdm(range(len(dataset)), desc="Evaluating DETR on test set"):
+        img, target = dataset[idx]
+        image = Image.open(os.path.join(test_path, dataset.coco.loadImgs(dataset.ids[idx])[0]['file_name']))
+
+        # Get the ground truth boxes and labels
+        actual_boxes = [ann['bbox'] for ann in target['annotations']]
+        actual_boxes = [[x, y, x + w, y + h] for x, y, w, h in actual_boxes]  # Convert from xywh to xyxy
+        actual_labels = [ann['category_id'] for ann in target['annotations']]
+
+        # Skip images with no ground truth boxes
+        if len(actual_boxes) == 0:
+            continue
+
+        # Run inference with DETR
+        inputs = processor(images=image, return_tensors="pt").to(device)
+        with torch.no_grad():
+            outputs = detr_model(pixel_values=inputs['pixel_values'])
+
+        # Post-process DETR predictions
+        processed_outputs = processor.post_process_object_detection(outputs, target_sizes=[(image.height, image.width)], threshold=0.5)[0]
+        pred_boxes = processed_outputs['boxes'].cpu().numpy()
+        pred_scores = processed_outputs['scores'].cpu().numpy()
+        pred_labels = processed_outputs['labels'].cpu().numpy()
+
+        # Ensure the lengths of y_true and y_pred are consistent
+        if len(actual_labels) == len(pred_labels):
+            all_y_true.extend(actual_labels)  # Ground truth
+            all_y_pred.extend(pred_labels)    # Predictions
+        else:
+            # Handling cases where predictions don't match ground truth length
+            min_length = min(len(actual_labels), len(pred_labels))
+            all_y_true.extend(actual_labels[:min_length])
+            all_y_pred.extend(pred_labels[:min_length])
+
+        # Calculate IoUs and precision-recall per image
+        for iou_thresh in iou_thresholds:
+            matches = []
+            for pred_box in pred_boxes:
+                ious = [calculate_iou(pred_box, gt_box) for gt_box in actual_boxes]
+                max_iou = max(ious) if ious else 0
+                matches.append(1 if max_iou >= iou_thresh else 0)
+
+            if matches:
+                precision, recall, _ = precision_recall_curve(matches, pred_scores)
+                ap = average_precision_score(matches, pred_scores)
+                ap_scores[iou_thresh].append(ap)
+
+    # Calculate mean AP for each IoU threshold
+    for iou_thresh in iou_thresholds:
+        mean_ap = np.mean(ap_scores[iou_thresh]) if ap_scores[iou_thresh] else 0
+        print(f"mAP@{iou_thresh}: {mean_ap:.4f}")
+
+    # Calculate overall Precision, Recall, and F1-score using scikit-learn
+    precision = precision_score(all_y_true, all_y_pred, average='weighted')
+    recall = recall_score(all_y_true, all_y_pred, average='weighted')
+    f1 = f1_score(all_y_true, all_y_pred, average='weighted')
+
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1-score: {f1:.4f}")
+
+    # Confusion Matrix
+    conf_matrix = confusion_matrix(all_y_true, all_y_pred)
+    print("Confusion Matrix:\n", conf_matrix)
+
+# Run the evaluation
+evaluate_detr_model(detr_model, test_dataset, processor, device=device)
