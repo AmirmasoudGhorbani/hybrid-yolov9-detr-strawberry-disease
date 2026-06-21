@@ -1,0 +1,27 @@
+# Core deep-learning stack
+torch>=2.0
+torchvision>=0.15
+
+# YOLOv9
+ultralytics>=8.1
+
+# DETR
+transformers>=4.38
+pytorch-lightning>=2.0
+timm>=0.9
+
+# Data / COCO
+pycocotools>=2.0
+numpy==1.23.5
+pillow>=9.0
+opencv-python>=4.7
+
+# Metrics & visualisation
+scikit-learn>=1.2
+matplotlib>=3.6
+tqdm>=4.65
+
+# Optional (used in some training/exploration scripts)
+# datasets>=2.14
+# roboflow>=1.1
+# supervision==0.3.0
