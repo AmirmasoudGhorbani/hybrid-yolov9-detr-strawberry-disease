@@ -9,8 +9,9 @@
 [![DETR](https://img.shields.io/badge/DETR-HuggingFace-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/facebook/detr-resnet-50)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry-disease/blob/main/notebooks/demo.ipynb)
+[![Demo on Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Live%20Demo-blue)](https://huggingface.co/spaces/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry)
 
-[Quick Start](#-quick-start) · [Results](#-results) · [Architecture](#-architecture) · [CLI Usage](#-cli-inference) · [Training Pipeline](#-training-pipeline) · [Citation](#-citation)
+[Live Demo](#-live-demo) · [Quick Start](#-quick-start) · [Results](#-results) · [Architecture](#-architecture) · [CLI Usage](#-cli-inference) · [Training Pipeline](#-training-pipeline) · [Citation](#-citation)
 
 </div>
 
@@ -19,6 +20,14 @@
 <!-- Add your own sample result image here:
 ![Sample Detection](assets/sample_result.png)
 -->
+
+## Live Demo
+
+**[Try the model in your browser](https://huggingface.co/spaces/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry)** — upload any strawberry image and get instant disease/ripeness predictions with a side-by-side comparison of YOLOv9, DETR, and the hybrid output.
+
+> To deploy your own instance, see [`space/SETUP.md`](space/SETUP.md).
+
+---
 
 ## Highlights
 
@@ -218,6 +227,11 @@ hybrid-yolov9-detr-strawberry-disease/
 ├── assets/                      # sample images & diagrams
 ├── notebooks/
 │   └── demo.ipynb               # interactive Colab demo
+├── space/
+│   ├── app.py                   # Gradio app for HuggingFace Spaces
+│   ├── requirements.txt         # Space-specific dependencies
+│   ├── README.md                # HuggingFace Space metadata
+│   └── SETUP.md                 # step-by-step deployment guide
 └── src/
     ├── config.py                # centralised path & constant configuration
     ├── utils.py                 # shared datasets, Lightning module, IoU, helpers
