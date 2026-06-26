@@ -47,7 +47,10 @@ hybrid-yolov9-detr-strawberry-disease/
 ├── README.md
 ├── LICENSE
 ├── requirements.txt
+├── .gitignore
 └── src/
+    ├── config.py                # centralised path & constant configuration
+    ├── utils.py                 # shared datasets, Lightning module, IoU, helpers
     ├── train_yolo.py            # 1. train YOLOv9s from scratch
     ├── finetune_yolo.py         # 2. fine-tune the best YOLO weights (lower LR)
     ├── train_detr.py            # 3. train DETR (facebook/detr-resnet-50)
@@ -60,13 +63,13 @@ hybrid-yolov9-detr-strawberry-disease/
 ▶️ Pipeline & run order
 
 The scripts form a pipeline — each stage consumes the weights produced by the previous one.
-#ScriptInputProduces1train_yolo.pydataset (YOLO format)YOLOv9 best.pt2finetune_yolo.pyYOLO best.ptfine-tuned YOLO weights3train_detr.pydataset (COCO) + facebook/detr-resnet-50detr_strawberry_model_24optimize_detr.pydetr_strawberry_model_2..._model_finetuned5finetune_detr_extra.py..._model_finetuned..._model_extrafinetuned6evaluate_detr.py..._model_extrafinetunedmetrics (mAP, P/R/F1, confusion matrix)7hybrid_inference.pyfine-tuned YOLO + ..._model_extrafinetunedfused predictions + visualisationspython src/train_yolo.py
-python src/finetune_yolo.py
-python src/train_detr.py
-python src/optimize_detr.py
-python src/finetune_detr_extra.py
-python src/evaluate_detr.py
-python src/hybrid_inference.py
+#ScriptInputProduces1train_yolo.pydataset (YOLO format)YOLOv9 best.pt2finetune_yolo.pyYOLO best.ptfine-tuned YOLO weights3train_detr.pydataset (COCO) + facebook/detr-resnet-50detr_strawberry_model_24optimize_detr.pydetr_strawberry_model_2..._model_finetuned5finetune_detr_extra.py..._model_finetuned..._model_extrafinetuned6evaluate_detr.py..._model_extrafinetunedmetrics (mAP, P/R/F1, confusion matrix)7hybrid_inference.pyfine-tuned YOLO + ..._model_extrafinetunedfused predictions + visualisationspython -m src.train_yolo
+python -m src.finetune_yolo
+python -m src.train_detr
+python -m src.optimize_detr
+python -m src.finetune_detr_extra
+python -m src.evaluate_detr
+python -m src.hybrid_inference
 
 
 🛠 Installation
@@ -80,12 +83,12 @@ A CUDA-capable GPU is strongly recommended for training.
 
 ⚙️ Configuration
 
-These scripts were authored in Google Colab, so paths default to Google Drive, e.g.:
-train_path = '/content/drive/MyDrive/dataset/dataset json format/train'
-yolo_weights = '/content/drive/MyDrive/yolov9_lastfinetune_results/.../best.pt'
+All dataset and weight paths are centralised in `src/config.py`. The defaults point at
+Google Drive locations used during the original Colab development, e.g.:
+DETR_TRAIN_PATH = '/content/drive/MyDrive/dataset/dataset json format/train'
+YOLO_FINETUNE_BEST_PT = '/content/drive/MyDrive/yolov9_lastfinetune_results/.../best.pt'
 
-Before running locally, edit the path constants near the top of each script to point at 
-your dataset and weights directories.
+Before running locally, edit `src/config.py` once — no need to touch individual scripts.
 
 
 🔭 Future work
