@@ -1,0 +1,31 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Model weights
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Dataset (keep structure docs, ignore actual data)
+dataset/
+
+# Training outputs
+runs/
+lightning_logs/
+wandb/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/

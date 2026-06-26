@@ -12,7 +12,7 @@ timm>=0.9
 
 # Data / COCO
 pycocotools>=2.0
-numpy==1.23.5
+numpy>=1.23
 pillow>=9.0
 opencv-python>=4.7
 
