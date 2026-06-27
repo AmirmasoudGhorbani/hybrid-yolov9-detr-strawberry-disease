@@ -4,22 +4,24 @@
 
 **A hybrid object-detection pipeline that fuses YOLOv9 speed with DETR transformer precision to detect strawberry diseases and ripeness states.**
 
+<br/>
+
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-3776AB?logo=python&logoColor=white)](https://python.org)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org)
 [![YOLOv9](https://img.shields.io/badge/YOLOv9-Ultralytics-00FFFF?logo=yolo&logoColor=white)](https://docs.ultralytics.com)
 [![DETR](https://img.shields.io/badge/DETR-HuggingFace-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/facebook/detr-resnet-50)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry-disease/blob/main/notebooks/demo.ipynb)
 [![Demo on Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Live%20Demo-blue)](https://huggingface.co/spaces/Amir-masoud-gh96/hybrid-yolov9-detr-strawberry)
 
-[Live Demo](#-live-demo) · [Quick Start](#-quick-start) · [Results](#-results) · [Architecture](#-architecture) · [CLI Usage](#-cli-inference) · [Training Pipeline](#-training-pipeline) · [Citation](#-citation)
+<br/>
+
+[Live Demo](#live-demo) · [Quick Start](#quick-start) · [Results](#results) · [Architecture](#architecture) · [CLI Usage](#cli-inference) · [Training](#training-pipeline) · [Citation](#citation)
 
 </div>
 
----
-
-<!-- Add your own sample result image here:
-![Sample Detection](assets/sample_result.png)
--->
+<br/>
 
 ## Live Demo
 
@@ -49,14 +51,6 @@
 | Recall | 0.73 | 0.69 | **0.85** |
 
 > The hybrid model outperforms both standalone models on every metric. DETR refines YOLO's bounding boxes, improving localisation, while the non-end-to-end design keeps inference efficient.
-
-<!-- Uncomment once you add result images to assets/:
-### Visual Comparison
-
-| YOLOv9 Only | DETR Only | Hybrid (Fused) |
-|:-----------:|:---------:|:--------------:|
-| ![YOLO](assets/yolo_only.png) | ![DETR](assets/detr_only.png) | ![Hybrid](assets/hybrid_fused.png) |
--->
 
 ---
 
@@ -259,14 +253,7 @@ hybrid-yolov9-detr-strawberry-disease/
 
 ## Contributing
 
-Contributions are welcome! To get started:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes and commit: `git commit -m "Add your feature"`
-4. Push and open a pull request
-
-Please make sure your code follows the existing style and test any changes with a sample image before submitting.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
