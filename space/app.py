@@ -20,7 +20,7 @@ from ultralytics import YOLO
 
 # ── Configuration ───────────────────────────────────────────────────────
 # Update this to your HuggingFace Hub repo once you upload the weights
-HF_REPO_ID = "AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry"
+HF_REPO_ID = "Amir-masoud-gh96/hybrid-yolov9-detr-strawberry"
 
 DISEASE_NAMES = [
     "Angular Leafspot", "Anthracnose Fruit Rot", "Early-Turning", "Gray Mold",
@@ -51,29 +51,22 @@ def load_models():
     cache_dir = os.path.join(os.path.dirname(__file__), ".model_cache")
     os.makedirs(cache_dir, exist_ok=True)
 
-    yolo_path = hf_hub_download(
-        repo_id=HF_REPO_ID, filename="yolo/best.pt", cache_dir=cache_dir,
-    )
-    detr_dir = snapshot_download(
-        repo_id=HF_REPO_ID, allow_patterns="detr_model/*", cache_dir=cache_dir,
-    )
-    processor_dir = snapshot_download(
-        repo_id=HF_REPO_ID, allow_patterns="detr_processor/*", cache_dir=cache_dir,
-    )
+    # Download all files from the HF repo
+    repo_dir = snapshot_download(repo_id=HF_REPO_ID, cache_dir=cache_dir)
 
+    # YOLO weights (flat: best.pt in repo root)
+    yolo_path = os.path.join(repo_dir, "best.pt")
     yolo_model = YOLO(yolo_path)
     yolo_model.fuse()
     yolo_model.to(DEVICE)
     yolo_model.overrides["mode"] = "predict"
 
-    detr_model = DetrForObjectDetection.from_pretrained(
-        os.path.join(detr_dir, "detr_model"),
-    ).to(DEVICE)
+    # DETR model — config.json and model.safetensors are in the repo root
+    detr_model = DetrForObjectDetection.from_pretrained(repo_dir).to(DEVICE)
     detr_model.eval()
 
-    processor = DetrImageProcessor.from_pretrained(
-        os.path.join(processor_dir, "detr_processor"),
-    )
+    # DETR processor — preprocessor_config.json is in the repo root
+    processor = DetrImageProcessor.from_pretrained(repo_dir)
 
     return yolo_model, detr_model, processor
 

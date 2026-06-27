@@ -6,29 +6,22 @@ Follow these steps to get your live demo running.
 
 1. Go to https://huggingface.co and sign in (or create an account)
 2. Create a new **Model** repository called `hybrid-yolov9-detr-strawberry`
-3. Upload your weights with this folder structure:
+3. Upload your weights — all files flat in the repo root:
 
 ```
 hybrid-yolov9-detr-strawberry/
-├── yolo/
-│   └── best.pt                          ← your fine-tuned YOLO weights
-├── detr_model/
-│   ├── config.json                      ← from detr_strawberry_model_extrafinetuned/
-│   └── model.safetensors (or pytorch_model.bin)
-└── detr_processor/
-    └── preprocessor_config.json         ← from detr_strawberry_processor_extrafinetuned/
+├── best.pt                      ← your fine-tuned YOLO weights
+├── config.json                  ← from detr_strawberry_model_extrafinetuned/
+├── model.safetensors            ← from detr_strawberry_model_extrafinetuned/
+└── preprocessor_config.json     ← from detr_strawberry_processor_extrafinetuned/
 ```
 
-You can upload via the web UI (drag & drop) or the CLI:
+You can upload via the HuggingFace web UI (drag & drop all 4 files) or the CLI:
 
 ```bash
 pip install huggingface-hub
 huggingface-cli login
-
-# From the folder containing your weights:
-huggingface-cli upload AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry yolo/best.pt yolo/best.pt
-huggingface-cli upload AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry detr_strawberry_model_extrafinetuned detr_model
-huggingface-cli upload AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry detr_strawberry_processor_extrafinetuned detr_processor
+huggingface-cli upload AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry best.pt config.json model.safetensors preprocessor_config.json
 ```
 
 ## Step 2: Create a HuggingFace Space
@@ -77,7 +70,7 @@ HF_REPO_ID = "YourUsername/your-repo-name"
 
 - **Out of memory on CPU Basic:** The DETR model needs ~1.5GB RAM. If the free tier
   isn't enough, upgrade to CPU Upgrade ($0.03/hr) or T4 GPU ($0.10/hr).
-- **Weights not found:** Make sure the folder structure in your HF model repo matches
-  exactly: `yolo/best.pt`, `detr_model/`, `detr_processor/`.
+- **Weights not found:** Make sure your HF model repo contains all 4 files in the root:
+  `best.pt`, `config.json`, `model.safetensors`, `preprocessor_config.json`.
 - **Slow first load:** The first request downloads the weights (~500MB). Subsequent
   requests are cached.
