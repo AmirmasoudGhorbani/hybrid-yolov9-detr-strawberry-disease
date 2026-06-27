@@ -38,6 +38,10 @@ DETR_PROCESSOR_FINETUNED = "/content/drive/MyDrive/detr_strawberry_processor_fin
 DETR_MODEL_EXTRAFINETUNED = "/content/drive/MyDrive/detr_strawberry_model_extrafinetuned"
 DETR_PROCESSOR_EXTRAFINETUNED = "/content/drive/MyDrive/detr_strawberry_processor_extrafinetuned"
 
+# ── Improved DETR output paths (v2 retraining) ─────────────────────────
+DETR_MODEL_V2 = "/content/drive/MyDrive/detr_strawberry_v2"
+DETR_PROCESSOR_V2 = "/content/drive/MyDrive/detr_strawberry_processor_v2"
+
 # ── Model constants ─────────────────────────────────────────────────────
 NUM_LABELS = 13  # 12 disease/ripeness classes + 1 background
 
@@ -55,3 +59,8 @@ DISEASE_NAMES = [
     "Turning",
     "White-Strawberry",
 ]
+
+# Proper id2label / label2id for DETR config (was missing in original training)
+ID2LABEL = {i: name for i, name in enumerate(DISEASE_NAMES)}
+ID2LABEL[12] = "no-object"
+LABEL2ID = {v: k for k, v in ID2LABEL.items()}

@@ -16,7 +16,7 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import DetrImageProcessor, DetrForObjectDetection
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
-from src.config import COCO_ANNOTATION_FILE
+from src.config import COCO_ANNOTATION_FILE, ID2LABEL, LABEL2ID
 
 
 # ── Device ──────────────────────────────────────────────────────────────
@@ -110,6 +110,36 @@ def detr_collate_fn(processor):
     return _collate
 
 
+# ── Augmented COCO dataset (for improved DETR training) ────────────────
+
+class AugmentedCocoDetection(torchvision.datasets.CocoDetection):
+    """CocoDetection with data augmentation for DETR training."""
+
+    def __init__(self, img_folder, processor, augment=True):
+        ann_file = os.path.join(img_folder, COCO_ANNOTATION_FILE)
+        super().__init__(img_folder, ann_file)
+        self.processor = processor
+        self.augment = augment
+        self._transforms = torchvision.transforms.Compose([
+            torchvision.transforms.RandomHorizontalFlip(p=0.5),
+            torchvision.transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
+            torchvision.transforms.RandomAdjustSharpness(sharpness_factor=2, p=0.3),
+        ]) if augment else None
+
+    def __getitem__(self, idx):
+        img, target = super().__getitem__(idx)
+        image_id = self.ids[idx]
+        target = {"image_id": image_id, "annotations": target}
+
+        if self._transforms is not None:
+            img = self._transforms(img)
+
+        encoding = self.processor(images=img, annotations=target, return_tensors="pt")
+        pixel_values = encoding["pixel_values"].squeeze()
+        target = encoding["labels"][0]
+        return pixel_values, target
+
+
 # ── DETR Lightning module ──────────────────────────────────────────────
 
 class Detr(pl.LightningModule):
@@ -120,6 +150,8 @@ class Detr(pl.LightningModule):
             model_name_or_path,
             num_labels=13,
             ignore_mismatched_sizes=True,
+            id2label=ID2LABEL,
+            label2id=LABEL2ID,
         )
         self.lr = lr
         self.lr_backbone = lr_backbone
