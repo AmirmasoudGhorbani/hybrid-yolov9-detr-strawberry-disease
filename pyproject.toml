@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "hybrid-yolov9-detr-strawberry"
+version = "1.0.0"
+description = "Hybrid YOLOv9-DETR pipeline for strawberry disease and ripeness detection"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "Amir Ghorbani" },
+]
+keywords = ["object-detection", "yolov9", "detr", "strawberry", "plant-disease", "deep-learning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Image Recognition",
+]
+dependencies = [
+    "torch>=2.0",
+    "torchvision>=0.15",
+    "ultralytics>=8.1",
+    "transformers>=4.38",
+    "pytorch-lightning>=2.0",
+    "timm>=0.9",
+    "pycocotools>=2.0",
+    "numpy>=1.23",
+    "pillow>=9.0",
+    "opencv-python>=4.7",
+    "scikit-learn>=1.2",
+    "matplotlib>=3.6",
+    "tqdm>=4.65",
+]
+
+[project.urls]
+Homepage = "https://github.com/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry-disease"
+Repository = "https://github.com/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry-disease"
+
+[project.scripts]
+strawberry-detect = "src.predict:main"
+
+[tool.setuptools.packages.find]
+include = ["src*"]

@@ -3,20 +3,37 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
 
 # Model weights
 *.pt
 *.pth
 *.ckpt
 *.safetensors
+*.onnx
+*.engine
+*.tflite
 
 # Dataset (keep structure docs, ignore actual data)
 dataset/
+data/
 
 # Training outputs
 runs/
 lightning_logs/
 wandb/
+mlruns/
+outputs/
+results/
+
+# Model cache
+.model_cache/
 
 # OS / editor
 .DS_Store
@@ -26,6 +43,11 @@ Thumbs.db
 *~
 .idea/
 .vscode/
+*.code-workspace
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Environment files
+.env
+.env.*

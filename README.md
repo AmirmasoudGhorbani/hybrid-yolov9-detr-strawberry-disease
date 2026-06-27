@@ -9,7 +9,7 @@
 [![DETR](https://img.shields.io/badge/DETR-HuggingFace-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/facebook/detr-resnet-50)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry-disease/blob/main/notebooks/demo.ipynb)
-[![Demo on Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Live%20Demo-blue)](https://huggingface.co/spaces/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry)
+[![Demo on Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Spaces-Live%20Demo-blue)](https://huggingface.co/spaces/Amir-masoud-gh96/hybrid-yolov9-detr-strawberry)
 
 [Live Demo](#-live-demo) · [Quick Start](#-quick-start) · [Results](#-results) · [Architecture](#-architecture) · [CLI Usage](#-cli-inference) · [Training Pipeline](#-training-pipeline) · [Citation](#-citation)
 
@@ -23,7 +23,7 @@
 
 ## Live Demo
 
-**[Try the model in your browser](https://huggingface.co/spaces/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry)** — upload any strawberry image and get instant disease/ripeness predictions with a side-by-side comparison of YOLOv9, DETR, and the hybrid output.
+**[Try the model in your browser](https://huggingface.co/spaces/Amir-masoud-gh96/hybrid-yolov9-detr-strawberry)** — upload any strawberry image and get instant disease/ripeness predictions with a side-by-side comparison of YOLOv9, DETR, and the hybrid output.
 
 > To deploy your own instance, see [`space/SETUP.md`](space/SETUP.md).
 
@@ -97,6 +97,12 @@ This gives us YOLO's speed and recall with DETR's precise localisation.
 ```bash
 git clone https://github.com/AmirmasoudGhorbani/hybrid-yolov9-detr-strawberry-disease.git
 cd hybrid-yolov9-detr-strawberry-disease
+pip install -e .
+```
+
+Or without installing as a package:
+
+```bash
 pip install -r requirements.txt
 ```
 
@@ -112,7 +118,8 @@ The notebook walks through loading pre-trained weights, running inference, and v
 
 ## CLI Inference
 
-Run the hybrid model on any strawberry image from the command line:
+Run the hybrid model on any strawberry image from the command line.
+After `pip install -e .`, you can also use `strawberry-detect` instead of `python -m src.predict`:
 
 ```bash
 # Single image
@@ -222,11 +229,13 @@ All dataset and weight paths are centralised in **`src/config.py`**. The default
 hybrid-yolov9-detr-strawberry-disease/
 ├── README.md
 ├── LICENSE
+├── pyproject.toml               # package metadata & pip install -e .
 ├── requirements.txt
 ├── .gitignore
 ├── assets/                      # sample images & diagrams
 ├── notebooks/
-│   └── demo.ipynb               # interactive Colab demo
+│   ├── demo.ipynb               # interactive Colab demo
+│   └── retrain_detr.ipynb       # retrain DETR with improvements
 ├── space/
 │   ├── app.py                   # Gradio app for HuggingFace Spaces
 │   ├── requirements.txt         # Space-specific dependencies
@@ -241,9 +250,23 @@ hybrid-yolov9-detr-strawberry-disease/
     ├── train_detr.py            # 3. train DETR (facebook/detr-resnet-50)
     ├── optimize_detr.py         # 4. fine-tune DETR + StepLR + confusion matrix
     ├── finetune_detr_extra.py   # 5. extra DETR fine-tuning pass
+    ├── retrain_detr.py          # improved DETR retraining (replaces stages 3-5)
     ├── evaluate_detr.py         # 6. evaluate DETR on the test set
     └── hybrid_inference.py      # 7. YOLO + DETR fusion via IoU-based selection
 ```
+
+---
+
+## Contributing
+
+Contributions are welcome! To get started:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes and commit: `git commit -m "Add your feature"`
+4. Push and open a pull request
+
+Please make sure your code follows the existing style and test any changes with a sample image before submitting.
 
 ---
 

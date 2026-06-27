@@ -8,9 +8,11 @@ Usage:
     python -m src.predict --image path/to/image.jpg --threshold 0.4 --iou-threshold 0.6
 """
 
+from __future__ import annotations
+
 import argparse
 import os
-import sys
+from typing import Optional
 
 import matplotlib
 matplotlib.use("Agg")
@@ -28,7 +30,11 @@ from src.config import (
 from src.utils import calculate_iou, DEVICE
 
 
-def load_models(yolo_weights=None, detr_model_path=None, detr_processor_path=None):
+def load_models(
+    yolo_weights: Optional[str] = None,
+    detr_model_path: Optional[str] = None,
+    detr_processor_path: Optional[str] = None,
+) -> tuple:
     yolo_weights = yolo_weights or YOLO_FINETUNE_BEST_PT
     detr_model_path = detr_model_path or DETR_MODEL_EXTRAFINETUNED
     detr_processor_path = detr_processor_path or DETR_PROCESSOR_EXTRAFINETUNED
@@ -45,8 +51,14 @@ def load_models(yolo_weights=None, detr_model_path=None, detr_processor_path=Non
     return yolo_model, detr_model, processor
 
 
-def run_hybrid_inference(image, yolo_model, detr_model, processor,
-                         threshold=0.5, iou_threshold=0.5):
+def run_hybrid_inference(
+    image: Image.Image,
+    yolo_model,
+    detr_model,
+    processor,
+    threshold: float = 0.5,
+    iou_threshold: float = 0.5,
+) -> dict:
     yolo_results = yolo_model.predict(image, stream=False, verbose=False)
     yolo_boxes = yolo_results[0].boxes.xyxy.cpu().numpy() if yolo_results[0].boxes is not None else np.array([])
     yolo_scores = yolo_results[0].boxes.conf.cpu().numpy() if yolo_results[0].boxes is not None else np.array([])
@@ -100,7 +112,7 @@ def run_hybrid_inference(image, yolo_model, detr_model, processor,
     }
 
 
-def draw_predictions(image, results, show_comparison=True):
+def draw_predictions(image: Image.Image, results: dict, show_comparison: bool = True) -> plt.Figure:
     if show_comparison:
         fig, axes = plt.subplots(1, 3, figsize=(24, 8))
         fig.suptitle("Hybrid YOLOv9-DETR Strawberry Disease Detection", fontsize=16, fontweight="bold")
@@ -147,9 +159,16 @@ def draw_predictions(image, results, show_comparison=True):
     return fig
 
 
-def predict_image(image_path, yolo_model, detr_model, processor,
-                  output_path=None, threshold=0.5, iou_threshold=0.5,
-                  show_comparison=True):
+def predict_image(
+    image_path: str,
+    yolo_model,
+    detr_model,
+    processor,
+    output_path: Optional[str] = None,
+    threshold: float = 0.5,
+    iou_threshold: float = 0.5,
+    show_comparison: bool = True,
+) -> dict:
     image = Image.open(image_path).convert("RGB")
     results = run_hybrid_inference(image, yolo_model, detr_model, processor,
                                   threshold=threshold, iou_threshold=iou_threshold)
